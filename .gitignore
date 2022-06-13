@@ -1,0 +1,7 @@
+# Editor files
+.cache
+.vscode
+compile_commands.json
+
+# Build files
+build
