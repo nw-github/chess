@@ -31,13 +31,14 @@ namespace zc
         std::optional<Position> ScreenToCoords(sf::RenderWindow &window) const;
 
     private:
-        sf::Sprite  mSprites[2][Piece::MAX];
-        sf::Texture         mPieces;
-        sf::Font            mFont;
-        std::string         mTitle{"White"};
+        sf::Sprite   mSprites[Team::MAX][Piece::MAX];
+        sf::Texture  mPieces;
+        sf::Font     mFont;
+        std::string  mTitle{"White"};
 
-        Board              &mBoard;
-        Position            mSelected{INVALID_POS};
-        Piece::Type         mPromotion{Piece::MAX};
+        Board       &mBoard;
+        Position     mSelected{INVALID_POS};
+        Piece::Type  mPromotion{Piece::MAX};
+        
     };
 }

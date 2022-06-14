@@ -54,7 +54,7 @@ int main(int argc, char **)
 
         if (argc > 1)
         {
-            static int player = rand() % 2 == 0 ? zc::Board::PLAYERB : zc::Board::PLAYERW;
+            static const auto player = rand() % zc::Team::MAX == 0 ? zc::Team::BLACK : zc::Team::WHITE;
             
             if (const auto *piece = board.GetPromoting())
                 if (piece->team == player)
@@ -65,7 +65,7 @@ int main(int argc, char **)
                 const auto moves = board.GetValidMoves(board.GetTurn());
                 if (!moves.empty())
                 {
-                    const auto move = moves[rand() % moves.size()];
+                    const auto &move = moves[rand() % moves.size()];
                     if (board.TryMove(move.first, move.second))
                         renderer.UpdateTitle();
                 }

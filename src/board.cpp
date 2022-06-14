@@ -5,20 +5,20 @@
 
 namespace zc
 {
-    bool Piece::OpposingTeam(int other) const
+    bool Piece::OpposingTeam(Team other) const
     {
-        return team != other && other != INVALID_TEAM && team != INVALID_TEAM;
+        return team != other && other != Team::MAX && team != Team::MAX;
     }
 
     bool Piece::IsEmpty() const
     {
-        return team == INVALID_TEAM || type == Piece::MAX;
+        return team == Team::MAX || type == Type::MAX;
     }
 
     void Piece::Clear()
     {
-        team = INVALID_TEAM;
-        type = Piece::MAX;
+        team = Team::MAX;
+        type = Type::MAX;
     }
 
     void Piece::Move(Piece &other)
@@ -34,7 +34,7 @@ namespace zc
 {
     Board::Board()
     {
-        auto InitSide = [&](int pawns, int back, int team)
+        auto InitSide = [&](Int pawns, Int back, Team team)
         {
             At('A', back) = At('H', back) = Piece{Piece::Type::ROOK, team};
             At('B', back) = At('G', back) = Piece{Piece::Type::KNIGHT, team};
@@ -46,13 +46,13 @@ namespace zc
                 At(c, pawns) = Piece{Piece::Type::PAWN, team};
         };
 
-        InitSide(SIZE - 1, SIZE, PLAYERB);
-        InitSide(2, 1, PLAYERW);
+        InitSide(2, 1, Team::WHITE);
+        InitSide(SIZE - 1, SIZE, Team::BLACK);
     }
 
     // Utils
 
-    Position Board::GetKing(int team) const
+    Position Board::GetKing(Team team) const
     {
         const auto it = std::find_if(std::begin(mBoard), std::end(mBoard),
             [team](const auto &a)
@@ -63,16 +63,16 @@ namespace zc
         if (it == std::end(mBoard))
             return INVALID_POS;
 
-        const int index = std::distance(std::begin(mBoard), it);
-        return {index % SIZE, index / SIZE};
+        const auto index = std::distance(std::begin(mBoard), it);
+        return {static_cast<Int>(index % SIZE), static_cast<Int>(index / SIZE)};
     }
 
-    int Board::GetTurn() const
+    Team Board::GetTurn() const
     {
         return mTurn;
     }
 
-    Piece &Board::At(char col, int row)
+    Piece &Board::At(char col, Int row)
     {
         return (*this)(col - 'A', SIZE - row);
     }
@@ -84,7 +84,7 @@ namespace zc
         return nullptr;
     }
 
-    Piece &Board::operator()(int x, int y)
+    Piece &Board::operator()(Int x, Int y)
     {
         if (!IsValid(x, y))
             throw std::runtime_error(fmt::format("Invalid board coordinates ({}, {})", x, y));
@@ -97,7 +97,7 @@ namespace zc
         return (*this)(pos.x, pos.y);
     }
 
-    const Piece &Board::operator()(int x, int y) const
+    const Piece &Board::operator()(Int x, Int y) const
     {
         if (!IsValid(x, y))
             throw std::runtime_error(fmt::format("Invalid board coordinates ({}, {})", x, y));
@@ -122,9 +122,9 @@ namespace zc
         return Status::ACTIVE;
     }
 
-    bool Board::IsValid(int x, int y) const
+    bool Board::IsValid(Int x, Int y) const
     {
-        return x < SIZE &&y < SIZE &&x >= 0 && y >= 0;
+        return x < SIZE && y < SIZE && x >= 0 && y >= 0;
     }
 
     bool Board::IsValid(const Position &pos) const
@@ -136,7 +136,7 @@ namespace zc
 
     void Board::NextTurn()
     {
-        mTurn = mTurn == PLAYERW ? PLAYERB : PLAYERW;
+        mTurn = mTurn == Team::WHITE ? Team::BLACK : Team::WHITE;
     }
 
     void Board::Promote(Piece::Type type)
@@ -165,7 +165,7 @@ namespace zc
         case Piece::PAWN:
             if (abs(src.y - dest.y) == 2)
             {
-                for (int x = dest.x - 1; x <= dest.x + 1; x++)
+                for (auto x = dest.x - 1; x <= dest.x + 1; x++)
                 {
                     if (!IsValid(x, dest.y))
                         continue;
@@ -176,7 +176,7 @@ namespace zc
                 }
             }
 
-            if ((piece.team == PLAYERW && dest.y == 0) || (piece.team == PLAYERB && dest.y == SIZE - 1))
+            if ((piece.team == Team::WHITE && dest.y == 0) || (piece.team == Team::BLACK && dest.y == SIZE - 1))
                 mPromoting = dest;
 
             break;
@@ -287,7 +287,7 @@ namespace zc
                 return false;
             }
 
-            if ((dest.y - src.y > 0 && piece.team == PLAYERW) || (dest.y - src.y < 0 && piece.team == PLAYERB))
+            if ((dest.y - src.y > 0 && piece.team == Team::WHITE) || (dest.y - src.y < 0 && piece.team == Team::BLACK))
                 return false;
 
             break;
@@ -316,17 +316,17 @@ namespace zc
         return true;
     }
 
-    bool Board::IsInCheck(int team, const Position &king) const
+    bool Board::IsInCheck(Team team, const Position &king) const
     {
-        for (int y = 0; y < SIZE; y++)
-            for (int x = 0; x < SIZE; x++)
+        for (Int y = 0; y < SIZE; y++)
+            for (Int x = 0; x < SIZE; x++)
                 if ((*this)(x, y).OpposingTeam(team) && IsValidMove({x, y}, king))
                     return true;
 
         return false;
     }
 
-    bool Board::IsKingInCheck(int team) const
+    bool Board::IsKingInCheck(Team team) const
     {
         const auto king = GetKing(team);
 
@@ -337,20 +337,20 @@ namespace zc
         return IsInCheck(team, king);
     }
 
-    int Board::GetValidMoveCount(int team) const
+    std::size_t Board::GetValidMoveCount(Team team) const
     {
-        int moves = 0;
-        for (int y = 0; y < SIZE; y++)
+        std::size_t moves = 0;
+        for (Int y = 0; y < SIZE; y++)
         {
-            for (int x = 0; x < SIZE; x++)
+            for (Int x = 0; x < SIZE; x++)
             {
                 const auto &piece = (*this)(x, y);
                 if (piece.team != team)
                     continue;
 
                 // TODO: this is lazy
-                for (int ry = 0; ry < SIZE; ry++)
-                    for (int rx = 0; rx < SIZE; rx++)
+                for (Int ry = 0; ry < SIZE; ry++)
+                    for (Int rx = 0; rx < SIZE; rx++)
                         if (IsValidMove({x, y}, {rx, ry}))
                             moves++;
             }
@@ -359,21 +359,21 @@ namespace zc
         return moves;
     }
 
-    std::vector<std::pair<Position, Position>> Board::GetValidMoves(int team) const
+    std::vector<std::pair<Position, Position>> Board::GetValidMoves(Team team) const
     {
         std::vector<std::pair<Position, Position>> moves;
 
-        for (int y = 0; y < SIZE; y++)
+        for (Int y = 0; y < SIZE; y++)
         {
-            for (int x = 0; x < SIZE; x++)
+            for (Int x = 0; x < SIZE; x++)
             {
                 const auto &piece = (*this)(x, y);
                 if (piece.team != team)
                     continue;
 
                 // TODO: this is lazy
-                for (int ry = 0; ry < SIZE; ry++)
-                    for (int rx = 0; rx < SIZE; rx++)
+                for (Int ry = 0; ry < SIZE; ry++)
+                    for (Int rx = 0; rx < SIZE; rx++)
                         if (IsValidMove({x, y}, {rx, ry}))
                             moves.push_back({{x, y}, {rx, ry}});
             }
@@ -388,6 +388,6 @@ namespace zc
         if (abs(dest.x - src.x) != 2 || (dest.y - src.y) != 0 || king.moved || IsInCheck(king.team, src))
             return {};
 
-        return Position{(dest.x - src.x) > 0 ? SIZE - 1 : 0, src.y};
+        return Position{static_cast<Int>((dest.x - src.x) > 0 ? SIZE - 1 : 0), src.y};
     }
 }

@@ -73,9 +73,9 @@ namespace zc
 
     void BoardRenderer::Render(sf::RenderWindow &window)
     {
-        for (int y = 0; y < Board::SIZE; y++)
+        for (Int y = 0; y < Board::SIZE; y++)
         {
-            for (int x = 0; x < Board::SIZE; x++)
+            for (Int x = 0; x < Board::SIZE; x++)
             {
                 static const sf::Color LIGHT{227, 214, 182};
                 static const sf::Color DARK{169, 105, 61};
@@ -123,9 +123,9 @@ namespace zc
             }
         }
 
-        for (int y = 0; y < Board::SIZE; y++)
+        for (Int y = 0; y < Board::SIZE; y++)
         {
-            for (int x = 0; x < Board::SIZE; x++)
+            for (Int x = 0; x < Board::SIZE; x++)
             {
                 if (const auto &piece = mBoard[{x, y}]; !piece.IsEmpty())
                 {
@@ -206,7 +206,7 @@ namespace zc
         switch (mBoard.GetStatus())
         {
         case Board::ACTIVE:
-            mTitle = mBoard.GetTurn() == Board::PLAYERB ? "Black" : "White";
+            mTitle = mBoard.GetTurn() == Team::BLACK ? "Black" : "White";
             break;
         case Board::CHECKMATE:
             mTitle = "Checkmate!";
@@ -220,7 +220,7 @@ namespace zc
     std::optional<Position> BoardRenderer::ScreenToCoords(sf::RenderWindow &window) const
     {
         const auto pos    = sf::Mouse::getPosition(window);
-        const auto result = Position{pos.x / PIECE_SIZE, pos.y / PIECE_SIZE};
+        const auto result = Position{static_cast<Int>(pos.x / PIECE_SIZE), static_cast<Int>(pos.y / PIECE_SIZE)};
         if (!mBoard.IsValid(result))
             return {};
         return result;
