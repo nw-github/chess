@@ -254,8 +254,19 @@ namespace zc
                     return false;
 
                 const auto &rp = (*this)(*rook);
-                if (rp.IsEmpty() || rp.moved || !TracePath(src, *rook, true))
-                    return {};
+                if (rp.IsEmpty() || rp.moved)
+                    return false;
+
+                const Position dir{static_cast<Int>((dest.x - src.x) / dist.x), 0};
+                
+                Position now = src;
+                while ((now += dir) != *rook)
+                {
+                    if (!(*this)(now).IsEmpty())
+                        return false;
+                    if ((now.x - rook->x) < (now.x - dest.x) && IsInCheck(piece.team, src))
+                        return false;
+                }
             }
 
             break;
@@ -320,7 +331,7 @@ namespace zc
         return !copy.IsKingInCheck(piece.team);
     }
 
-    bool Board::TracePath(Position src, const Position &dest, bool castling) const
+    bool Board::TracePath(Position src, const Position &dest) const
     {
         Position dir(dest.x - src.x, dest.y - src.y);
         if (dir.x != 0)
@@ -328,9 +339,8 @@ namespace zc
         if (dir.y != 0)
             dir.y /= abs(dir.y);
 
-        const auto team = (*this)(src).team;
         while ((src += dir) != dest)
-            if (!(*this)(src).IsEmpty() || (castling && IsInCheck(team, src)))
+            if (!(*this)(src).IsEmpty())
                 return false;
 
         return true;

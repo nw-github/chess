@@ -122,8 +122,8 @@ namespace zc
         const Piece &operator()(Int x, Int y) const;
         const Piece &operator()(const Position &pos) const;
 
-        // For pieces that move straight or diagonally, ensure there are no pieces in the way
-        bool TracePath(Position src, const Position &dest, bool castling = false) const;
+        // For a straight or diagonal move, ensure there are no pieces between src and dest
+        bool TracePath(Position src, const Position &dest) const;
         bool IsInCheck(Team team, const Position &dest) const;
         bool IsKingInCheck(Team team) const;
 
