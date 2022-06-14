@@ -131,6 +131,24 @@ namespace zc
     {
         return IsValid(pos.x, pos.y);
     }
+    
+    // Data
+
+    std::vector<std::uint8_t> Board::Save() const
+    {
+        std::vector<std::uint8_t> data(sizeof(*this), '\0');
+        std::memcpy(data.data(), this, data.size());
+        return data;
+    }
+
+    bool Board::Load(const std::vector<std::uint8_t> &data)
+    {
+        if (data.size() != sizeof(*this))
+            return false;
+            
+        std::memcpy(this, data.data(), data.size());
+        return true;
+    }
 
     // Logic
 
@@ -234,7 +252,9 @@ namespace zc
                 const auto rook = IsCastlingMove(src, dest);
                 if (!rook)
                     return false;
-                if ((*this)(*rook).moved || !TracePath(src, *rook, true))
+
+                const auto &rp = (*this)(*rook);
+                if (rp.IsEmpty() || rp.moved || !TracePath(src, *rook, true))
                     return {};
             }
 

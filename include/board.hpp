@@ -106,12 +106,16 @@ namespace zc
         bool TryMove(const Position &src, const Position &dest);
         void Promote(Piece::Type type);
 
-        std::vector<std::pair<Position, Position>> GetValidMoves(Team team) const;
-
-    private:
         // Chess notation (ie 'E4')
         Piece &At(char col, Int row);
 
+        std::vector<std::pair<Position, Position>> GetValidMoves(Team team) const;
+    
+    public:
+        std::vector<std::uint8_t> Save() const;
+        bool Load(const std::vector<std::uint8_t> &data);
+
+    private:
         Piece &operator()(Int x, Int y);
         Piece &operator()(const Position &pos);
 
