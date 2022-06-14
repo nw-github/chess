@@ -15,35 +15,35 @@ namespace zc
         MAX,
     };
 
-    struct Position
+    struct Vector
     {
         Int x;
         Int y;
 
     public:
-        Position(Int x, Int y) : x(x), y(y) { }
-        Position() : Position(0, 0) { }
+        Vector(Int x, Int y) : x(x), y(y) { }
+        Vector() : Vector(0, 0) { }
 
-        Position &operator+=(const Position &other)
+        Vector &operator+=(const Vector &other)
         {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        bool operator==(const Position &other) const
+        bool operator==(const Vector &other) const
         {
             return x == other.x && y == other.y;
         }
 
-        bool operator!=(const Position &other) const
+        bool operator!=(const Vector &other) const
         {
             return !(*this == other);
         }
         
     };
 
-    inline const Position INVALID_POS{-1, -1};
+    inline const Vector INVALID_POS{-1, -1};
 
     struct Piece
     {
@@ -61,7 +61,7 @@ namespace zc
         Type     type{Type::MAX};
         Team     team{Team::MAX};
         bool     moved{false};
-        Position enPassant{INVALID_POS};
+        Vector enPassant{INVALID_POS};
 
     public:
         bool OpposingTeam(Team other) const;
@@ -91,53 +91,52 @@ namespace zc
 
     public:
         Team GetTurn() const;
-        Position GetKing(Team team) const;
+        Vector GetKing(Team team) const;
         const Piece *GetPromoting() const;
 
-        const Piece &operator[](const Position &pos) const;
+        const Piece &operator[](const Vector &pos) const;
 
         Status GetStatus() const;
 
         bool IsValid(Int x, Int y) const;
-        bool IsValid(const Position &pos) const;
+        bool IsValid(const Vector &pos) const;
+        bool IsValidMove(const Vector &src, const Vector &dest) const;
 
-        bool IsValidMove(const Position &src, const Position &dest) const;
-
-        bool TryMove(const Position &src, const Position &dest);
+        bool TryMove(const Vector &src, const Vector &dest);
         void Promote(Piece::Type type);
 
-        // Chess notation (ie 'E4')
-        Piece &At(char col, Int row);
-
-        std::vector<std::pair<Position, Position>> GetValidMoves(Team team) const;
+        std::vector<std::pair<Vector, Vector>> GetValidMoves(Team team) const;
     
     public:
         std::vector<std::uint8_t> Save() const;
         bool Load(const std::vector<std::uint8_t> &data);
 
     private:
+        // Chess notation (ie 'E4')
+        Piece &At(char col, Int row);
+
         Piece &operator()(Int x, Int y);
-        Piece &operator()(const Position &pos);
+        Piece &operator()(const Vector &pos);
 
         const Piece &operator()(Int x, Int y) const;
-        const Piece &operator()(const Position &pos) const;
+        const Piece &operator()(const Vector &pos) const;
 
         // For a straight or diagonal move, ensure there are no pieces between src and dest
-        bool TracePath(Position src, const Position &dest) const;
-        bool IsInCheck(Team team, const Position &dest) const;
+        bool TracePath(Vector src, const Vector &dest) const;
+        bool IsInCheck(Team team, const Vector &dest) const;
         bool IsKingInCheck(Team team) const;
 
         std::size_t GetValidMoveCount(Team team) const;
 
-        void Move(const Position &src, const Position &king);
+        void Move(const Vector &src, const Vector &king);
         void NextTurn();
 
         // returns position of the rook to castle with if valid
-        std::optional<Position> IsCastlingMove(const Position &src, const Position &dest) const;
+        std::optional<Vector> IsCastlingMove(const Vector &src, const Vector &dest) const;
 
     private:
         Piece    mBoard[SIZE * SIZE];
-        Position mPromoting{INVALID_POS};
+        Vector mPromoting{INVALID_POS};
         Team     mTurn{Team::WHITE};
 
     };

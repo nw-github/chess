@@ -52,7 +52,7 @@ namespace zc
 
     // Utils
 
-    Position Board::GetKing(Team team) const
+    Vector Board::GetKing(Team team) const
     {
         const auto it = std::find_if(std::begin(mBoard), std::end(mBoard),
             [team](const auto &a)
@@ -92,7 +92,7 @@ namespace zc
         return mBoard[y * SIZE + x];
     }
 
-    Piece &Board::operator()(const Position &pos)
+    Piece &Board::operator()(const Vector &pos)
     {
         return (*this)(pos.x, pos.y);
     }
@@ -105,12 +105,12 @@ namespace zc
         return mBoard[y * SIZE + x];
     }
 
-    const Piece &Board::operator()(const Position &pos) const
+    const Piece &Board::operator()(const Vector &pos) const
     {
         return (*this)(pos.x, pos.y);
     }
 
-    const Piece &Board::operator[](const Position &pos) const
+    const Piece &Board::operator[](const Vector &pos) const
     {
         return (*this)(pos.x, pos.y);
     }
@@ -127,7 +127,7 @@ namespace zc
         return x < SIZE && y < SIZE && x >= 0 && y >= 0;
     }
 
-    bool Board::IsValid(const Position &pos) const
+    bool Board::IsValid(const Vector &pos) const
     {
         return IsValid(pos.x, pos.y);
     }
@@ -168,7 +168,7 @@ namespace zc
         }
     }
 
-    void Board::Move(const Position &src, const Position &dest)
+    void Board::Move(const Vector &src, const Vector &dest)
     {
         auto &piece  = (*this)(src);
         auto &target = (*this)(dest);
@@ -210,7 +210,7 @@ namespace zc
         piece.Move(target);
     }
 
-    bool Board::TryMove(const Position &src, const Position &dest)
+    bool Board::TryMove(const Vector &src, const Vector &dest)
     {
         auto &piece = (*this)(src);
         if (piece.team != mTurn)
@@ -231,7 +231,7 @@ namespace zc
 
     // Helpers
 
-    bool Board::IsValidMove(const Position &src, const Position &dest) const
+    bool Board::IsValidMove(const Vector &src, const Vector &dest) const
     {
         if (src == dest)
             return false;
@@ -240,7 +240,7 @@ namespace zc
         if (piece.team == (*this)(dest).team)
             return false;
 
-        const Position dist(abs(dest.x - src.x), abs(dest.y - src.y));
+        const Vector dist(abs(dest.x - src.x), abs(dest.y - src.y));
         switch (piece.type)
         {
         case Piece::KING:
@@ -257,9 +257,9 @@ namespace zc
                 if (rp.IsEmpty() || rp.moved)
                     return false;
 
-                const Position dir{static_cast<Int>((dest.x - src.x) / dist.x), 0};
+                const Vector dir{static_cast<Int>((dest.x - src.x) / dist.x), 0};
                 
-                Position now = src;
+                Vector now = src;
                 while ((now += dir) != *rook)
                 {
                     if (!(*this)(now).IsEmpty())
@@ -331,9 +331,9 @@ namespace zc
         return !copy.IsKingInCheck(piece.team);
     }
 
-    bool Board::TracePath(Position src, const Position &dest) const
+    bool Board::TracePath(Vector src, const Vector &dest) const
     {
-        Position dir(dest.x - src.x, dest.y - src.y);
+        Vector dir(dest.x - src.x, dest.y - src.y);
         if (dir.x != 0)
             dir.x /= abs(dir.x);
         if (dir.y != 0)
@@ -346,7 +346,7 @@ namespace zc
         return true;
     }
 
-    bool Board::IsInCheck(Team team, const Position &king) const
+    bool Board::IsInCheck(Team team, const Vector &king) const
     {
         for (Int y = 0; y < SIZE; y++)
             for (Int x = 0; x < SIZE; x++)
@@ -389,9 +389,9 @@ namespace zc
         return moves;
     }
 
-    std::vector<std::pair<Position, Position>> Board::GetValidMoves(Team team) const
+    std::vector<std::pair<Vector, Vector>> Board::GetValidMoves(Team team) const
     {
-        std::vector<std::pair<Position, Position>> moves;
+        std::vector<std::pair<Vector, Vector>> moves;
 
         for (Int y = 0; y < SIZE; y++)
         {
@@ -412,12 +412,12 @@ namespace zc
         return moves;
     }
 
-    std::optional<Position> Board::IsCastlingMove(const Position &src, const Position &dest) const
+    std::optional<Vector> Board::IsCastlingMove(const Vector &src, const Vector &dest) const
     {
         const auto &king = (*this)(src);
         if (abs(dest.x - src.x) != 2 || (dest.y - src.y) != 0 || king.moved || IsInCheck(king.team, src))
             return {};
 
-        return Position{static_cast<Int>((dest.x - src.x) > 0 ? SIZE - 1 : 0), src.y};
+        return Vector{static_cast<Int>((dest.x - src.x) > 0 ? SIZE - 1 : 0), src.y};
     }
 }

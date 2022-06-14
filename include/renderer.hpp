@@ -28,7 +28,7 @@ namespace zc
     private:
         void RenderPromotionDialog(sf::RenderWindow &window);
 
-        std::optional<Position> ScreenToCoords(sf::RenderWindow &window) const;
+        std::optional<Vector> ScreenToCoords(sf::RenderWindow &window) const;
 
     private:
         sf::Sprite   mSprites[Team::MAX][Piece::MAX];
@@ -37,7 +37,7 @@ namespace zc
         std::string  mTitle{"White"};
 
         Board       &mBoard;
-        Position     mSelected{INVALID_POS};
+        Vector     mSelected{INVALID_POS};
         Piece::Type  mPromotion{Piece::MAX};
         
     };

@@ -81,7 +81,7 @@ namespace zc
                 static const sf::Color DARK{169, 105, 61};
 
                 const sf::Vector2f world(x * PIECE_SIZE, y * PIECE_SIZE);
-                const Position position(x, y);
+                const Vector position(x, y);
 
                 const bool lightSquare = (y % 2 != 0 || x % 2 != 1) && (y % 2 != 1 || x % 2 != 0);
 
@@ -217,10 +217,10 @@ namespace zc
         }
     }
 
-    std::optional<Position> BoardRenderer::ScreenToCoords(sf::RenderWindow &window) const
+    std::optional<Vector> BoardRenderer::ScreenToCoords(sf::RenderWindow &window) const
     {
         const auto pos    = sf::Mouse::getPosition(window);
-        const auto result = Position{static_cast<Int>(pos.x / PIECE_SIZE), static_cast<Int>(pos.y / PIECE_SIZE)};
+        const auto result = Vector{static_cast<Int>(pos.x / PIECE_SIZE), static_cast<Int>(pos.y / PIECE_SIZE)};
         if (!mBoard.IsValid(result))
             return {};
         return result;
