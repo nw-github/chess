@@ -58,9 +58,9 @@ namespace zc
             MAX
         };
         
-        Type     type{Type::MAX};
-        Team     team{Team::MAX};
-        bool     moved{false};
+        Type   type{Type::MAX};
+        Team   team{Team::MAX};
+        bool   moved{false};
         Vector enPassant{INVALID_POS};
 
     public:
@@ -135,9 +135,9 @@ namespace zc
         std::optional<Vector> IsCastlingMove(const Vector &src, const Vector &dest) const;
 
     private:
-        Piece    mBoard[SIZE * SIZE];
+        Piece  mBoard[SIZE * SIZE];
         Vector mPromoting{INVALID_POS};
-        Team     mTurn{Team::WHITE};
+        Team   mTurn{Team::WHITE};
 
     };
 }

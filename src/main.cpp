@@ -22,12 +22,15 @@ int main(int argc, char **argv)
             ai = true;
     }
     
-    sf::RenderWindow window(sf::VideoMode(zc::BoardRenderer::PIECE_SIZE * 8, zc::BoardRenderer::PIECE_SIZE * 8), "", sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode(zc::BoardRenderer::BOARD_SIZE + 200, zc::BoardRenderer::BOARD_SIZE), "", sf::Style::Close);
+    window.setVerticalSyncEnabled(true);
+
     sf::Clock clock;
     sf::Time last, update;
 
     zc::Board board;
     zc::BoardRenderer renderer(board);
+    renderer.SetPosition(sf::Vector2f{100.f, 0.f});
     while (window.isOpen())
     {
         const auto now = clock.getElapsedTime();
@@ -112,7 +115,7 @@ int main(int argc, char **argv)
 
         if (ai)
         {
-            static const auto player = rand() % zc::Team::MAX == 0 ? zc::Team::BLACK : zc::Team::WHITE;
+            static const auto player = rand() % zc::Team::MAX == 0;
             
             if (const auto *piece = board.GetPromoting())
                 if (piece->team == player)
