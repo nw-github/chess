@@ -1,46 +1,48 @@
 #include "board.hpp"
 
-#include <fmt/format.h>
 #include <algorithm>
+#include <fmt/format.h>
 
-namespace zc
-{
-    bool Piece::OpposingTeam(Team other) const
-    {
+namespace xt {
+    bool Piece::OpposingTeam(Team other) const {
         return team != other && other != Team::MAX && team != Team::MAX;
     }
 
-    bool Piece::IsEmpty() const
-    {
+    bool Piece::IsEmpty() const {
         return team == Team::MAX || type == Type::MAX;
     }
 
-    void Piece::Clear()
-    {
+    void Piece::Clear() {
         team = Team::MAX;
         type = Type::MAX;
     }
 
-    void Piece::Move(Piece &other)
-    {
-        other = *this;
+    void Piece::Move(Piece &other) {
+        other       = *this;
         other.moved = true;
 
         Clear();
     }
-}
+} // namespace xt
 
-namespace zc
-{
-    Board::Board()
-    {
-        auto InitSide = [&](Int pawns, Int back, Team team)
-        {
-            At('A', back) = At('H', back) = Piece{Piece::Type::ROOK, team};
-            At('B', back) = At('G', back) = Piece{Piece::Type::KNIGHT, team};
-            At('C', back) = At('F', back) = Piece{Piece::Type::BISHOP, team};
-            At('D', back) = Piece{Piece::Type::QUEEN, team};
-            At('E', back) = Piece{Piece::Type::KING, team};
+namespace xt {
+    Board::Board() {
+        Initialize({
+            {'A', Piece::Type::ROOK},
+            {'B', Piece::Type::KNIGHT},
+            {'C', Piece::Type::BISHOP},
+            {'D', Piece::Type::QUEEN},
+            {'E', Piece::Type::KING},
+            {'F', Piece::Type::BISHOP},
+            {'G', Piece::Type::KNIGHT},
+            {'H', Piece::Type::ROOK},
+        });
+    }
+
+    void Board::Initialize(const std::vector<std::pair<char, Piece::Type>> &rear) {
+        const auto InitSide = [&](Int pawns, Int back, Team team) {
+            for (const auto &pair : rear)
+                At(pair.first, back) = Piece{pair.second, team};
 
             for (char c = 'A'; c < 'A' + SIZE; c++)
                 At(c, pawns) = Piece{Piece::Type::PAWN, team};
@@ -51,14 +53,10 @@ namespace zc
     }
 
     // Utils
-
-    Vector Board::GetKing(Team team) const
-    {
-        const auto it = std::find_if(std::begin(mBoard), std::end(mBoard),
-            [team](const auto &a)
-            {
-                return a.type == Piece::KING && a.team == team;
-            });
+    Vector Board::GetKing(Team team) const {
+        const auto it = std::find_if(std::begin(mBoard), std::end(mBoard), [team](const auto &a) {
+            return a.type == Piece::KING && a.team == team;
+        });
 
         if (it == std::end(mBoard))
             return INVALID_POS;
@@ -67,124 +65,105 @@ namespace zc
         return {static_cast<Int>(index % SIZE), static_cast<Int>(index / SIZE)};
     }
 
-    Team Board::GetTurn() const
-    {
+    Team Board::GetTurn() const {
         return mTurn;
     }
 
-    Piece &Board::At(char col, Int row)
-    {
+    Piece &Board::At(char col, Int row) {
         return (*this)(col - 'A', SIZE - row);
     }
 
-    const Piece *Board::GetPromoting() const
-    {
+    const Piece *Board::GetPromoting() const {
         if (IsValid(mPromoting))
             return &(*this)(mPromoting);
         return nullptr;
     }
 
-    Piece &Board::operator()(Int x, Int y)
-    {
+    Piece &Board::operator()(Int x, Int y) {
         if (!IsValid(x, y))
             throw std::runtime_error(fmt::format("Invalid board coordinates ({}, {})", x, y));
 
         return mBoard[y * SIZE + x];
     }
 
-    Piece &Board::operator()(const Vector &pos)
-    {
+    Piece &Board::operator()(const Vector &pos) {
         return (*this)(pos.x, pos.y);
     }
 
-    const Piece &Board::operator()(Int x, Int y) const
-    {
+    const Piece &Board::operator()(Int x, Int y) const {
         if (!IsValid(x, y))
             throw std::runtime_error(fmt::format("Invalid board coordinates ({}, {})", x, y));
 
         return mBoard[y * SIZE + x];
     }
 
-    const Piece &Board::operator()(const Vector &pos) const
-    {
+    const Piece &Board::operator()(const Vector &pos) const {
         return (*this)(pos.x, pos.y);
     }
 
-    const Piece &Board::operator[](const Vector &pos) const
-    {
+    const Piece &Board::operator[](const Vector &pos) const {
         return (*this)(pos.x, pos.y);
     }
 
-    Board::Status Board::GetStatus() const
-    {
+    Board::Status Board::GetStatus() const {
         if (!GetValidMoveCount(mTurn))
             return IsKingInCheck(mTurn) ? Status::CHECKMATE : Status::STALEMATE;
         return Status::ACTIVE;
     }
 
-    bool Board::IsValid(Int x, Int y) const
-    {
+    bool Board::IsValid(Int x, Int y) const {
         return x < SIZE && y < SIZE && x >= 0 && y >= 0;
     }
 
-    bool Board::IsValid(const Vector &pos) const
-    {
+    bool Board::IsValid(const Vector &pos) const {
         return IsValid(pos.x, pos.y);
     }
-    
+
     // Data
 
-    std::vector<std::uint8_t> Board::Save() const
-    {
+    std::vector<std::uint8_t> Board::Save() const {
         std::vector<std::uint8_t> data(sizeof(*this), '\0');
         std::memcpy(data.data(), this, data.size());
         return data;
     }
 
-    bool Board::Load(const std::vector<std::uint8_t> &data)
-    {
+    bool Board::Load(const std::vector<std::uint8_t> &data) {
         if (data.size() != sizeof(*this))
             return false;
-            
+
         std::memcpy(this, data.data(), data.size());
         return true;
     }
 
     // Logic
 
-    void Board::NextTurn()
-    {
+    void Board::NextTurn() {
         mTurn = mTurn == Team::WHITE ? Team::BLACK : Team::WHITE;
     }
 
-    void Board::Promote(Piece::Type type)
-    {
-        if (IsValid(mPromoting))
-        {
+    void Board::Promote(Piece::Type type) {
+        if (IsValid(mPromoting)) {
             (*this)(mPromoting).type = type;
-            mPromoting = INVALID_POS;
+            mPromoting               = INVALID_POS;
 
             NextTurn();
         }
     }
 
-    void Board::Move(const Vector &src, const Vector &dest)
-    {
+    void Board::Move(const Vector &src, const Vector &dest) {
         auto &piece  = (*this)(src);
         auto &target = (*this)(dest);
-        if (piece.type == Piece::PAWN && IsValid(piece.enPassant) && src.x - dest.x != 0 && target.IsEmpty())
+        if (piece.type == Piece::PAWN && IsValid(piece.enPassant) && src.x - dest.x != 0 &&
+            target.IsEmpty())
             (*this)(piece.enPassant).Clear();
 
         for (auto &piece : mBoard)
             piece.enPassant = INVALID_POS;
 
-        switch (piece.type)
-        {
+        switch (piece.type) {
         case Piece::PAWN:
-            if (abs(src.y - dest.y) == 2)
-            {
-                for (auto x = dest.x - 1; x <= dest.x + 1; x++)
-                {
+            if (abs(src.y - dest.y) == 2) {
+                for (auto x = dest.x - 1; x <= dest.x + 1; x++) {
                     if (!IsValid(x, dest.y))
                         continue;
 
@@ -194,7 +173,8 @@ namespace zc
                 }
             }
 
-            if ((piece.team == Team::WHITE && dest.y == 0) || (piece.team == Team::BLACK && dest.y == SIZE - 1))
+            if ((piece.team == Team::WHITE && dest.y == 0) ||
+                (piece.team == Team::BLACK && dest.y == SIZE - 1))
                 mPromoting = dest;
 
             break;
@@ -210,16 +190,14 @@ namespace zc
         piece.Move(target);
     }
 
-    bool Board::TryMove(const Vector &src, const Vector &dest)
-    {
+    bool Board::TryMove(const Vector &src, const Vector &dest) {
         auto &piece = (*this)(src);
         if (piece.team != mTurn)
             return false;
 
-        if (IsValidMove(src, dest))
-        {
+        if (IsValidMove(src, dest)) {
             Move(src, dest);
-            
+
             if (!IsValid(mPromoting))
                 NextTurn();
 
@@ -231,8 +209,7 @@ namespace zc
 
     // Helpers
 
-    bool Board::IsValidMove(const Vector &src, const Vector &dest) const
-    {
+    bool Board::IsValidMove(const Vector &src, const Vector &dest) const {
         if (src == dest)
             return false;
 
@@ -241,14 +218,12 @@ namespace zc
             return false;
 
         const Vector dist(abs(dest.x - src.x), abs(dest.y - src.y));
-        switch (piece.type)
-        {
+        switch (piece.type) {
         case Piece::KING:
             if (dist.y > 1)
                 return false;
 
-            if (dist.x > 1)
-            {
+            if (dist.x > 1) {
                 const auto rook = IsCastlingMove(src, dest);
                 if (!rook)
                     return false;
@@ -258,10 +233,9 @@ namespace zc
                     return false;
 
                 const Vector dir{static_cast<Int>((dest.x - src.x) / dist.x), 0};
-                
+
                 Vector now = src;
-                while ((now += dir) != *rook)
-                {
+                while ((now += dir) != *rook) {
                     if (!(*this)(now).IsEmpty())
                         return false;
                     if ((now.x - rook->x) < (now.x - dest.x) && IsInCheck(piece.team, src))
@@ -304,21 +278,21 @@ namespace zc
                 if (dist.y != 2 || dist.x != 0 || piece.moved || !TracePath(src, dest))
                     return false;
 
-            if (dist.x > 0)
-            {
+            if (dist.x > 0) {
                 bool capturing = piece.OpposingTeam((*this)(dest).team);
                 if (!capturing && !IsValid(piece.enPassant))
                     return false;
 
-                if (!capturing && IsValid(piece.enPassant) && abs(dest.x - piece.enPassant.x) > abs(src.x - piece.enPassant.x))
+                if (!capturing && IsValid(piece.enPassant) &&
+                    abs(dest.x - piece.enPassant.x) > abs(src.x - piece.enPassant.x))
                     return false;
 
-            } else if (!(*this)(dest).IsEmpty())
-            {
+            } else if (!(*this)(dest).IsEmpty()) {
                 return false;
             }
 
-            if ((dest.y - src.y > 0 && piece.team == Team::WHITE) || (dest.y - src.y < 0 && piece.team == Team::BLACK))
+            if ((dest.y - src.y > 0 && piece.team == Team::WHITE) ||
+                (dest.y - src.y < 0 && piece.team == Team::BLACK))
                 return false;
 
             break;
@@ -331,8 +305,7 @@ namespace zc
         return !copy.IsKingInCheck(piece.team);
     }
 
-    bool Board::TracePath(Vector src, const Vector &dest) const
-    {
+    bool Board::TracePath(Vector src, const Vector &dest) const {
         Vector dir(dest.x - src.x, dest.y - src.y);
         if (dir.x != 0)
             dir.x /= abs(dir.x);
@@ -346,8 +319,7 @@ namespace zc
         return true;
     }
 
-    bool Board::IsInCheck(Team team, const Vector &king) const
-    {
+    bool Board::IsInCheck(Team team, const Vector &king) const {
         for (Int y = 0; y < SIZE; y++)
             for (Int x = 0; x < SIZE; x++)
                 if ((*this)(x, y).OpposingTeam(team) && IsValidMove({x, y}, king))
@@ -356,8 +328,7 @@ namespace zc
         return false;
     }
 
-    bool Board::IsKingInCheck(Team team) const
-    {
+    bool Board::IsKingInCheck(Team team) const {
         const auto king = GetKing(team);
 
         // King captured
@@ -367,13 +338,10 @@ namespace zc
         return IsInCheck(team, king);
     }
 
-    std::size_t Board::GetValidMoveCount(Team team) const
-    {
+    std::size_t Board::GetValidMoveCount(Team team) const {
         std::size_t moves = 0;
-        for (Int y = 0; y < SIZE; y++)
-        {
-            for (Int x = 0; x < SIZE; x++)
-            {
+        for (Int y = 0; y < SIZE; y++) {
+            for (Int x = 0; x < SIZE; x++) {
                 const auto &piece = (*this)(x, y);
                 if (piece.team != team)
                     continue;
@@ -389,14 +357,11 @@ namespace zc
         return moves;
     }
 
-    std::vector<std::pair<Vector, Vector>> Board::GetValidMoves(Team team) const
-    {
+    std::vector<std::pair<Vector, Vector>> Board::GetValidMoves(Team team) const {
         std::vector<std::pair<Vector, Vector>> moves;
 
-        for (Int y = 0; y < SIZE; y++)
-        {
-            for (Int x = 0; x < SIZE; x++)
-            {
+        for (Int y = 0; y < SIZE; y++) {
+            for (Int x = 0; x < SIZE; x++) {
                 const auto &piece = (*this)(x, y);
                 if (piece.team != team)
                     continue;
@@ -412,12 +377,12 @@ namespace zc
         return moves;
     }
 
-    std::optional<Vector> Board::IsCastlingMove(const Vector &src, const Vector &dest) const
-    {
+    std::optional<Vector> Board::IsCastlingMove(const Vector &src, const Vector &dest) const {
         const auto &king = (*this)(src);
-        if (abs(dest.x - src.x) != 2 || (dest.y - src.y) != 0 || king.moved || IsInCheck(king.team, src))
+        if (abs(dest.x - src.x) != 2 || (dest.y - src.y) != 0 || king.moved ||
+            IsInCheck(king.team, src))
             return {};
 
         return Vector{static_cast<Int>((dest.x - src.x) > 0 ? SIZE - 1 : 0), src.y};
     }
-}
+} // namespace xt

@@ -1,22 +1,19 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <optional>
+#include <string>
+#include <vector>
 
-namespace zc
-{
+namespace xt {
     using Int = std::int8_t;
 
-    enum Team : std::int8_t
-    {
+    enum Team : std::int8_t {
         BLACK,
         WHITE,
         MAX,
     };
 
-    struct Vector
-    {
+    struct Vector {
         Int x;
         Int y;
 
@@ -24,40 +21,26 @@ namespace zc
         Vector(Int x, Int y) : x(x), y(y) { }
         Vector() : Vector(0, 0) { }
 
-        Vector &operator+=(const Vector &other)
-        {
+        Vector &operator+=(const Vector &other) {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        bool operator==(const Vector &other) const
-        {
+        bool operator==(const Vector &other) const {
             return x == other.x && y == other.y;
         }
 
-        bool operator!=(const Vector &other) const
-        {
+        bool operator!=(const Vector &other) const {
             return !(*this == other);
         }
-        
     };
 
     inline const Vector INVALID_POS{-1, -1};
 
-    struct Piece
-    {
-        enum Type : std::int8_t
-        {
-            QUEEN,
-            KING,
-            ROOK,
-            KNIGHT,
-            BISHOP,
-            PAWN,
-            MAX
-        };
-        
+    struct Piece {
+        enum Type : std::int8_t { QUEEN, KING, ROOK, KNIGHT, BISHOP, PAWN, MAX };
+
         Type   type{Type::MAX};
         Team   team{Team::MAX};
         bool   moved{false};
@@ -71,27 +54,21 @@ namespace zc
 
     private:
         static constexpr Int INVALID_TEAM{-1};
-
     };
 
-    class Board
-    {
+    class Board {
     public:
         static constexpr const Int SIZE = 8;
 
-        enum Status
-        {
-            ACTIVE,
-            CHECKMATE,
-            STALEMATE
-        };
+        enum Status { ACTIVE, CHECKMATE, STALEMATE };
 
     public:
         Board();
+        void Initialize(const std::vector<std::pair<char, Piece::Type>> &rear);
 
     public:
-        Team GetTurn() const;
-        Vector GetKing(Team team) const;
+        Team         GetTurn() const;
+        Vector       GetKing(Team team) const;
         const Piece *GetPromoting() const;
 
         const Piece &operator[](const Vector &pos) const;
@@ -102,14 +79,14 @@ namespace zc
         bool IsValid(const Vector &pos) const;
         bool IsValidMove(const Vector &src, const Vector &dest) const;
 
+        std::vector<std::pair<Vector, Vector>> GetValidMoves(Team team) const;
+
         bool TryMove(const Vector &src, const Vector &dest);
         void Promote(Piece::Type type);
 
-        std::vector<std::pair<Vector, Vector>> GetValidMoves(Team team) const;
-    
     public:
         std::vector<std::uint8_t> Save() const;
-        bool Load(const std::vector<std::uint8_t> &data);
+        bool                      Load(const std::vector<std::uint8_t> &data);
 
     private:
         // Chess notation (ie 'E4')
@@ -138,6 +115,5 @@ namespace zc
         Piece  mBoard[SIZE * SIZE];
         Vector mPromoting{INVALID_POS};
         Team   mTurn{Team::WHITE};
-
     };
-}
+} // namespace xt

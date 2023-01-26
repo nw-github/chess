@@ -1,47 +1,54 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
+
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <fstream>
+#include <numeric>
+#include <random>
 
 #include "renderer.hpp"
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     srand(time(nullptr));
 
     std::string save, load;
-    bool ai = false;
-    for (int i = 0; i < argc; i++)
-    {
-        if (!strcmp(argv[i], "-s") && i + 1 < argc)
+    xt::Team    player = xt::Team::MAX;
+    for (int i = 0; i < argc; i++) {
+        std::string_view arg{argv[i]};
+        if (arg == "-s" && i + 1 < argc)
             save = argv[++i];
-        if (!strcmp(argv[i], "-l") && i + 1 < argc)
+        if (arg == "-l" && i + 1 < argc)
             load = argv[++i];
-        if (!strcmp(argv[i], "-a"))
-            ai = true;
+        if (arg == "-w")
+            player = xt::Team::WHITE;
+        if (arg == "-b")
+            player = xt::Team::BLACK;
+        if (arg == "-r")
+            player = (xt::Team)(rand() % xt::Team::MAX);
     }
-    
-    sf::RenderWindow window(sf::VideoMode(zc::BoardRenderer::BOARD_SIZE + 200, zc::BoardRenderer::BOARD_SIZE), "", sf::Style::Close);
+
+    sf::RenderWindow window(
+        sf::VideoMode(xt::BoardRenderer::BOARD_SIZE, xt::BoardRenderer::BOARD_SIZE),
+        "",
+        sf::Style::Close);
     window.setVerticalSyncEnabled(true);
 
     sf::Clock clock;
-    sf::Time last, update;
+    sf::Time  last, update;
 
-    zc::Board board;
-    zc::BoardRenderer renderer(board);
-    renderer.SetPosition(sf::Vector2f{100.f, 0.f});
-    while (window.isOpen())
-    {
+    xt::Board         board;
+    xt::BoardRenderer renderer(board);
+    renderer.SetPosition(sf::Vector2f{0.f, 0.f});
+    while (window.isOpen()) {
         const auto now = clock.getElapsedTime();
         const auto fps = 1.f / (now - last).asSeconds();
-        last = now;
+        last           = now;
 
         sf::Event event;
-        while (window.pollEvent(event))
-        {
-            switch (event.type)
-            {
+        while (window.pollEvent(event)) {
+            switch (event.type) {
             case sf::Event::Closed:
                 window.close();
                 break;
@@ -49,13 +56,11 @@ int main(int argc, char **argv)
                 if (!event.key.control)
                     break;
 
-                switch (event.key.code)
-                {
+                switch (event.key.code) {
                 case sf::Keyboard::S:
                 {
                     std::ofstream file(save, std::ios::binary);
-                    if (file.good())
-                    {
+                    if (file.good()) {
                         const auto data = board.Save();
                         file.write(reinterpret_cast<const char *>(data.data()), data.size());
 
@@ -65,16 +70,14 @@ int main(int argc, char **argv)
                 case sf::Keyboard::L:
                 {
                     std::ifstream file(load, std::ios::binary | std::ios::ate);
-                    if (file.good())
-                    {
+                    if (file.good()) {
                         const auto size = file.tellg();
                         file.seekg(std::ios::beg);
 
                         std::vector<std::uint8_t> data(size, '\0');
                         file.read(reinterpret_cast<char *>(data.data()), data.size());
 
-                        if (board.Load(data))
-                        {
+                        if (board.Load(data)) {
                             renderer.UpdateTitle();
                             fmt::print("Loaded from '{}'!\n", load);
                             break;
@@ -100,36 +103,28 @@ int main(int argc, char **argv)
         window.display();
 
         static std::string status;
-        if ((clock.getElapsedTime() - update).asSeconds() > 1.f)
-        {
+        if ((clock.getElapsedTime() - update).asSeconds() > 1.f) {
             update = now;
             window.setTitle(fmt::format("{} ({:.0f} FPS)", status, fps));
         }
 
-        if (status != renderer.GetTitle())
-        {
+        if (status != renderer.GetTitle()) {
             update = now;
             status = renderer.GetTitle();
             window.setTitle(fmt::format("{} ({:.0f} FPS)", status, fps));
         }
 
-        if (ai)
-        {
-            static const auto player = rand() % zc::Team::MAX == 0;
-            
-            if (const auto *piece = board.GetPromoting())
-                if (piece->team == player)
-                    board.Promote(zc::Piece::QUEEN);
+        // 'ai'
+        if (const auto *piece = board.GetPromoting())
+            if (piece->team == player)
+                board.Promote(xt::Piece::QUEEN);
 
-            if (board.GetTurn() == player)
-            {
-                const auto moves = board.GetValidMoves(board.GetTurn());
-                if (!moves.empty())
-                {
-                    const auto &move = moves[rand() % moves.size()];
-                    if (board.TryMove(move.first, move.second))
-                        renderer.UpdateTitle();
-                }
+        if (board.GetTurn() == player) {
+            const auto moves = board.GetValidMoves(board.GetTurn());
+            if (!moves.empty()) {
+                const auto &move = moves[rand() % moves.size()];
+                if (board.TryMove(move.first, move.second))
+                    renderer.UpdateTitle();
             }
         }
     }

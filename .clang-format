@@ -1,9 +1,9 @@
 ---
 BasedOnStyle: LLVM
-IndentWidth: 3
+IndentWidth: 4
 ---
 Language: Cpp
-AccessModifierOffset: -3
+AccessModifierOffset: -4
 AlignConsecutiveAssignments: true
 AlignConsecutiveBitFields: true
 AlignConsecutiveMacros: true
@@ -14,22 +14,22 @@ BinPackArguments: false
 BinPackParameters: false
 BreakBeforeBraces: Custom
 BraceWrapping:
-    AfterEnum: true
+    AfterEnum: false
     AfterCaseLabel: true
-    AfterFunction: true
-    AfterNamespace: true
-    AfterStruct: true
-    AfterClass: true
-    AfterUnion: true
-    AfterExternBlock: true
-    AfterControlStatement: true
+    AfterFunction: false
+    AfterNamespace: false
+    AfterStruct: false
+    AfterClass: false
+    AfterUnion: false
+    AfterExternBlock: false
+    AfterControlStatement: false
     BeforeCatch: false
-    BeforeLambdaBody: true
+    BeforeLambdaBody: false
     BeforeWhile: false
     IndentBraces: false
     SplitEmptyRecord: false
     SplitEmptyNamespace: false
-ColumnLimit: 80
+ColumnLimit: 100
 CompactNamespaces: false
 Cpp11BracedListStyle: true
 IndentCaseBlocks: false
