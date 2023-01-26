@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
         }
 
         // 'ai'
-        if (const auto *piece = board.GetPromoting())
+        if (const auto piece = board.GetPromoting())
             if (piece->team == player)
                 board.Promote(xt::Piece::QUEEN);
 

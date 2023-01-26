@@ -67,9 +67,9 @@ namespace xt {
         void Initialize(const std::vector<std::pair<char, Piece::Type>> &rear);
 
     public:
-        Team         GetTurn() const;
-        Vector       GetKing(Team team) const;
-        const Piece *GetPromoting() const;
+        Team                 GetTurn() const;
+        Vector               GetKing(Team team) const;
+        std::optional<Piece> GetPromoting() const;
 
         const Piece &operator[](const Vector &pos) const;
 

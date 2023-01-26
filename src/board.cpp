@@ -73,10 +73,10 @@ namespace xt {
         return (*this)(col - 'A', SIZE - row);
     }
 
-    const Piece *Board::GetPromoting() const {
+    std::optional<Piece> Board::GetPromoting() const {
         if (IsValid(mPromoting))
-            return &(*this)(mPromoting);
-        return nullptr;
+            return (*this)(mPromoting);
+        return std::nullopt;
     }
 
     Piece &Board::operator()(Int x, Int y) {
@@ -381,7 +381,7 @@ namespace xt {
         const auto &king = (*this)(src);
         if (abs(dest.x - src.x) != 2 || (dest.y - src.y) != 0 || king.moved ||
             IsInCheck(king.team, src))
-            return {};
+            return std::nullopt;
 
         return Vector{static_cast<Int>((dest.x - src.x) > 0 ? SIZE - 1 : 0), src.y};
     }
