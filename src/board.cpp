@@ -121,6 +121,8 @@ namespace xt {
 
     // Data
 
+    // TODO: real serialization/deserialization of the board, maybe support FEN?
+
     std::vector<std::uint8_t> Board::Save() const {
         std::vector<std::uint8_t> data(sizeof(*this), '\0');
         std::memcpy(data.data(), this, data.size());

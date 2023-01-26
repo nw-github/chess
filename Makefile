@@ -15,7 +15,7 @@ DBG_FLAGS		:= -Og -ggdb
 REL_FLAGS		:= -O2
 
 # libraries
-LDFLAGS			+= -lfmt -lsfml-graphics -lsfml-window -lsfml-system -lbfd -lunwind
+LDFLAGS			+= -lfmt -lsfml-graphics -lsfml-window -lsfml-system
 
 # names
 TARGET			:= chess
