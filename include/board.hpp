@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace xt {
     using Int = std::int8_t;
