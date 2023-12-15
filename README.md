@@ -1,5 +1,8 @@
 # Chess
 
+![alt text](game.png "an image of the game")
+![alt text](promote.png "an image of the promotion menu")
+
 Build Requirements:
 - C++17 or greater
 - SFML
